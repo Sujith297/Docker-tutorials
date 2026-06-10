@@ -26,7 +26,45 @@ FROM node:18
 
 ---
 
-## 2. LABEL
+## 2. WORKDIR
+
+Used to set the working directory inside the container.
+
+All subsequent instructions such as `COPY`, `RUN`, `CMD`, and `ENTRYPOINT` execute from this directory.
+
+### Syntax
+
+```dockerfile
+WORKDIR /path
+```
+
+### Example
+
+```dockerfile
+WORKDIR /app
+```
+
+### Benefit
+
+Instead of repeatedly using:
+
+```dockerfile
+RUN cd /app && npm install
+RUN cd /app && npm start
+```
+
+Use:
+
+```dockerfile
+WORKDIR /app
+
+RUN npm install
+CMD ["npm","start"]
+```
+
+---
+
+## 3. LABEL
 
 Used to add metadata/description to the image.
 
@@ -45,7 +83,7 @@ LABEL version="1.0"
 
 ---
 
-## 3. MAINTAINER
+## 4. MAINTAINER
 
 Used to specify the author of the Dockerfile.
 
@@ -65,7 +103,7 @@ MAINTAINER Sujith
 
 ---
 
-## 4. EXPOSE
+## 5. EXPOSE
 
 Used to document the port on which the application runs inside the container.
 
@@ -83,7 +121,7 @@ EXPOSE 3000
 
 ---
 
-## 5. COPY
+## 6. COPY
 
 Copies files from the local system to the container.
 
@@ -101,7 +139,7 @@ COPY . /app
 
 ---
 
-## 6. ADD
+## 7. ADD
 
 Copies files or downloads content from a URL.
 
@@ -130,7 +168,7 @@ ADD https://example.com/file.zip /app
 
 ---
 
-## 7. RUN
+## 8. RUN
 
 Executes commands while building the Docker Image.
 
@@ -154,7 +192,7 @@ RUN yum install git -y
 
 ---
 
-## 8. CMD
+## 9. CMD
 
 Defines the default command executed when a container starts.
 
@@ -170,58 +208,15 @@ CMD ["command"]
 CMD ["npm","start"]
 ```
 
-### Common Examples
-
-#### React
-
-```dockerfile
-CMD ["npm","run","dev"]
-```
-
-#### Node.js Backend
-
-```dockerfile
-CMD ["npm","start"]
-```
-
 > Executes during `docker run`.
 
 ---
 
-## 9. ENTRYPOINT
+## 10. ENTRYPOINT
 
 Similar to CMD but used for fixed executable commands.
 
-### Syntax
-
-```dockerfile
-ENTRYPOINT ["command"]
-```
-
 ### Example
-
-```dockerfile
-ENTRYPOINT ["npm"]
-CMD ["start"]
-```
-
-### How It Works
-
-Container execution:
-
-```bash
-npm start
-```
-
-### CMD vs ENTRYPOINT
-
-| CMD                        | ENTRYPOINT            |
-| -------------------------- | --------------------- |
-| Can be overridden easily   | Fixed executable      |
-| Provides default arguments | Provides main command |
-| Flexible                   | More restrictive      |
-
-**Interview Example**
 
 ```dockerfile
 ENTRYPOINT ["npm"]
@@ -236,61 +231,24 @@ npm start
 
 ---
 
-## 10. ARG
+## 11. ARG
 
 Used to pass variables during image build time.
-
-### Syntax
-
-```dockerfile
-ARG VERSION
-```
-
-### Example
 
 ```dockerfile
 ARG VERSION=1.0
 ```
 
-Build:
-
-```bash
-docker build --build-arg VERSION=2.0 -t myapp .
-```
-
-> Can be modified during image build.
-
 ---
 
-## 11. ENV
+## 12. ENV
 
 Used to define environment variables inside the container.
-
-### Syntax
-
-```dockerfile
-ENV key=value
-```
-
-### Example
 
 ```dockerfile
 ENV PORT=3000
 ENV DB_HOST=mysql
 ```
-
-> Available inside the container at runtime.
-
----
-
-# ARG vs ENV
-
-| ARG                                          | ENV                                    |
-| -------------------------------------------- | -------------------------------------- |
-| Build-time variable                          | Runtime variable                       |
-| Available during image build                 | Available inside running container     |
-| Can be overridden using `--build-arg`        | Typically fixed inside image/container |
-| Not persisted in final container environment | Persisted in container environment     |
 
 ---
 
@@ -299,15 +257,19 @@ ENV DB_HOST=mysql
 ```text
 FROM
  ↓
+WORKDIR
+ ↓
 LABEL
  ↓
 COPY / ADD
  ↓
+ARG
+ ↓
+ENV
+ ↓
 RUN
  ↓
 EXPOSE
- ↓
-ENV
  ↓
 ENTRYPOINT
  ↓
@@ -322,6 +284,7 @@ Docker Image
 
 ```text
 FROM
+WORKDIR
 COPY
 RUN
 EXPOSE
@@ -330,5 +293,6 @@ ENTRYPOINT
 ARG
 ENV
 ```
+
 
 These are the Dockerfile instructions most frequently asked in DevOps and CI/CD interviews.
