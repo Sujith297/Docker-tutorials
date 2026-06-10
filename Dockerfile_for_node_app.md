@@ -94,12 +94,13 @@ CMD ["run","dev"]
 
 ### Stage 1 - Build Stage
 
-```dockerfile id="v71n1x"
+```dockerfile
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
 COPY package*.json .
+
 RUN npm install
 
 COPY . .
@@ -107,53 +108,14 @@ COPY . .
 
 ### Stage 2 - Runtime Stage
 
-```dockerfile id="7j9z2y"
+```dockerfile
 FROM node:20-alpine AS final
 
 WORKDIR /app
 
 COPY --from=build /app .
 
-ENTRYPOINT ["npm"]
-CMD ["run","dev"]
-```
-
----
-
-# Multi-Stage Build Flow
-
-```text id="5ezv1h"
-Stage 1 (Build)
-├── Install Dependencies
-├── Compile Application
-└── Generate Artifacts
-          ↓
-Stage 2 (Runtime)
-├── Copy Required Files
-└── Run Application
-```
-
----
-
-# Better Production Example
-
-For Node.js applications:
-
-```dockerfile id="e7k3xf"
-FROM node:20-alpine AS build
-
-WORKDIR /app
-
-COPY package*.json .
-RUN npm install
-
-COPY . .
-
-FROM node:20-alpine
-
-WORKDIR /app
-
-COPY --from=build /app .
+RUN npm install --production
 
 EXPOSE 3000
 
@@ -161,19 +123,39 @@ ENTRYPOINT ["npm"]
 CMD ["start"]
 ```
 
-> Interview Note: Production containers usually use `npm start` instead of `npm run dev`.
+### Benefits
+
+* Separates build and runtime environments
+* Reduces final image size
+* Improves security
+* Faster image transfer and deployment
+* Removes unnecessary development dependencies
 
 ---
 
-# Additional Image Optimization Techniques
+## Additional Size Reduction Techniques
 
-## Use .dockerignore
+### Use Production Dependencies Only
 
-Avoid copying unnecessary files.
+```dockerfile
+RUN npm install --production
+```
 
-### Example
+or
 
-```text id="5afn0l"
+```dockerfile
+RUN npm ci --omit=dev
+```
+
+Removes development dependencies from the final image.
+
+---
+
+### Use .dockerignore
+
+Example:
+
+```text
 node_modules
 .git
 .gitignore
@@ -181,87 +163,49 @@ README.md
 .env
 ```
 
----
-
-## Reduce Layers
-
-❌ Bad
-
-```dockerfile id="i5w2f3"
-RUN apt update
-RUN apt install git -y
-RUN apt install curl -y
-```
-
-✅ Good
-
-```dockerfile id="s7v2nz"
-RUN apt update && \
-    apt install -y git curl
-```
+Prevents unnecessary files from being copied into the image.
 
 ---
 
-## Copy Only Required Files
+## Updated Dockerfile Execution Flow
 
-❌ Bad
-
-```dockerfile id="y5z55v"
-COPY . .
-```
-
-✅ Better
-
-```dockerfile id="q7xv4v"
-COPY package*.json .
-COPY src/ src/
+```text
+FROM
+ ↓
+WORKDIR
+ ↓
+LABEL
+ ↓
+COPY / ADD
+ ↓
+ARG
+ ↓
+ENV
+ ↓
+RUN
+ ↓
+EXPOSE
+ ↓
+ENTRYPOINT
+ ↓
+CMD
+ ↓
+Docker Image
 ```
 
 ---
 
-## Remove Temporary Files
+## Most Common Docker Image Optimization Techniques
 
-```dockerfile id="rsl14z"
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-```
-
----
-
-# Interview Questions
-
-### What is a Multi-Stage Dockerfile?
-
-A Dockerfile that uses multiple `FROM` statements to separate build and runtime environments, reducing the final image size.
-
----
-
-### Why Use Alpine Images?
-
-* Smaller image size
-* Faster download and deployment
-* Reduced attack surface
-
----
-
-### Difference Between Alpine and Slim Images
-
-| Alpine                                 | Slim                       |
-| -------------------------------------- | -------------------------- |
-| Smallest size                          | Slightly larger            |
-| Uses musl libc                         | Uses glibc                 |
-| Faster downloads                       | Better compatibility       |
-| Sometimes package compatibility issues | Fewer compatibility issues |
-
----
-
-### Most Common Docker Image Optimization Techniques
-
-* Use Alpine/Slim base images
+* Use Alpine Images
+* Use Slim Images
 * Use Multi-Stage Builds
-* Use `.dockerignore`
-* Reduce Docker layers
-* Remove temporary files
-* Copy only required files
-* Avoid unnecessary dependencies
+* Use WORKDIR
+* Use .dockerignore
+* Install only Production Dependencies
+* Reduce Docker Layers
+* Remove Temporary Files
+* Copy Only Required Files
 
-These are the Docker optimization concepts most frequently asked in DevOps, Docker, Jenkins, and CI/CD interviews.
+```
+```
